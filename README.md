@@ -52,6 +52,16 @@ Most architecture reviews stop at technical notes. SevenTec Atlas turns architec
 
 ---
 
+## Public repo assets
+
+This repository also includes public-positioning assets for GitHub and portfolio use:
+
+- repo metadata pack: `./docs/github-repo-metadata.md`
+- pinned/profile copy: `./docs/github-profile-copy.md`
+- social preview asset: `./docs/branding/social-preview-og.svg`
+
+---
+
 ## Why this project exists
 
 Most technical audits fail in one of two ways:
