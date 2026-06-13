@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@seventec-atlas/db": ["../../packages/db/src/index.ts"],
+      "@seventec-atlas/domain": ["../../packages/domain/src/index.ts"],
+      "@seventec-atlas/scoring-core": ["../../packages/scoring-core/src/index.ts"],
+      "@seventec-atlas/ai-contracts": ["../../packages/ai-contracts/src/index.ts"],
+      "@seventec-atlas/ui": ["../../packages/ui/src/index.ts"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

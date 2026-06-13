@@ -1,0 +1,15 @@
+node_modules
+.next
+.turbo
+dist
+coverage
+.env
+.env.local
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+playwright-report
+test-results
+.qa-tmp
+.local
+.codex
