@@ -17,6 +17,22 @@ export const en = {
       "Evaluate architecture, performance, scalability, and maintainability with deterministic scoring first, then translate technical findings into sober executive narratives and exportable artifacts.",
     enterPlatform: "Enter platform",
     openDashboard: "Open dashboard",
+    productInActionEyebrow: "Product in action",
+    productInActionTitle: "The report itself is the product proof",
+    productInActionDescription:
+      "SevenTec Atlas does not stop at collecting answers. It converts structured architecture signals into a premium executive artifact with scorecards, prioritized risks, recommendations, and a decision-ready roadmap.",
+    productInActionImageAlt:
+      "SevenTec Atlas premium architecture report screenshot",
+    proofPointsEyebrow: "Why it matters",
+    proofPointsTitle: "Built to communicate serious architectural judgment",
+    proofPoints: [
+      "Deterministic scorecards before AI interpretation.",
+      "Executive-ready report layout designed for stakeholders, clients, and leadership reviews.",
+      "Priority risks, recommendations, and roadmap in one share-ready artifact.",
+    ],
+    proofAside:
+      "The strongest sales argument for an architecture intelligence product is not a promise. It is a report artifact that already looks credible.",
+    reviewDemoReport: "Review demo report",
     cards: [
       {
         eyebrow: "Deterministic-first",

@@ -17,6 +17,22 @@ export const es = {
       "Evalúa arquitectura, performance, escalabilidad y mantenibilidad con scoring determinista primero, y luego traduce los hallazgos técnicos en narrativas ejecutivas sobrias y artefactos exportables.",
     enterPlatform: "Entrar a la plataforma",
     openDashboard: "Abrir dashboard",
+    productInActionEyebrow: "Producto en acción",
+    productInActionTitle: "El reporte mismo es la prueba del producto",
+    productInActionDescription:
+      "SevenTec Atlas no se queda en recolectar respuestas. Convierte señales estructuradas de arquitectura en un artefacto ejecutivo premium con scorecards, riesgos priorizados, recomendaciones y un roadmap listo para decisión.",
+    productInActionImageAlt:
+      "Captura del reporte premium de arquitectura de SevenTec Atlas",
+    proofPointsEyebrow: "Por qué importa",
+    proofPointsTitle: "Diseñado para comunicar criterio arquitectónico serio",
+    proofPoints: [
+      "Scorecards deterministas antes de cualquier interpretación con IA.",
+      "Layout de reporte listo para ejecutivos, clientes y revisiones de liderazgo.",
+      "Riesgos prioritarios, recomendaciones y roadmap en un solo artefacto share-ready.",
+    ],
+    proofAside:
+      "El argumento de venta más fuerte para un producto de arquitectura no es una promesa: es un reporte que ya se ve creíble.",
+    reviewDemoReport: "Revisar demo report",
     cards: [
       {
         eyebrow: "Determinista primero",
