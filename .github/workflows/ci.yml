@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  quality:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: postgresql://atlas:atlasdev@127.0.0.1:5433/seventec_atlas
+      AUTH_SECRET: ci-build-secret
+      DEV_AUTH_ENABLED: "true"
+      AUTH_GITHUB_ID: replace-me
+      AUTH_GITHUB_SECRET: replace-me
+      AI_PROVIDER: openrouter
+      OPENROUTER_API_KEY: replace-me
+      OPENROUTER_MODEL: openrouter/auto
+      OPENAI_API_KEY: replace-me
+      OPENAI_MODEL: gpt-4o-mini
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Production build
+        run: pnpm build
