@@ -7,13 +7,13 @@ $composeFile = Join-Path $root "docker-compose.yml"
 $postgresDataDir = Join-Path $root ".local\postgres\data"
 $pgCtlExe = "C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe"
 
-function Test-DockerComposeAvailable {
+function Test-DockerComposeUsable {
   if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     return $false
   }
 
   try {
-    & docker compose version *> $null
+    & docker info *> $null
     return $LASTEXITCODE -eq 0
   }
   catch {
@@ -57,7 +57,7 @@ function Stop-LocalPostgres {
 
 Stop-LocalWeb
 
-if ((Test-Path $composeFile) -and (Test-Path $dbLocalScript) -and (Test-DockerComposeAvailable)) {
+if ((Test-Path $composeFile) -and (Test-Path $dbLocalScript) -and (Test-DockerComposeUsable)) {
   & $dbLocalScript restart
 }
 else {

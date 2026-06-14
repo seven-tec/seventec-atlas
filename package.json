@@ -23,9 +23,9 @@
     "typecheck": "tsc --noEmit -p apps/web/tsconfig.json",
     "demo:seed": "node --experimental-strip-types ./scripts/seed-demo.ts",
     "screenshots:i18n": "node ./scripts/capture-final-i18n.mjs",
-    "db:generate": "pnpm --filter @seventec-atlas/db db:generate",
-    "db:migrate": "pnpm --filter @seventec-atlas/db db:migrate",
-    "db:migrate:deploy": "pnpm --filter @seventec-atlas/db db:migrate:deploy"
+    "db:generate": "npm --prefix packages/db run db:generate",
+    "db:migrate": "npm --prefix packages/db run db:migrate",
+    "db:migrate:deploy": "npm --prefix packages/db run db:migrate:deploy"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",

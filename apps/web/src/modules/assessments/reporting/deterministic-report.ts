@@ -1,4 +1,4 @@
-import { defaultLocale, type Locale } from "@/i18n/config";
+import { defaultLocale, type Locale } from "../../../i18n/config.ts";
 import type {
   DeterministicRecommendation,
   DeterministicRisk,

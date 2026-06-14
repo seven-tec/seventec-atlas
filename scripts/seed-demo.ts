@@ -113,7 +113,7 @@ function buildRunArtifacts(values: Record<string, AnswerValue>, applicationName:
     scalabilityScore,
     maintainabilityScore,
     topRiskTitles: scoring.risks.map((risk) => risk.title),
-  });
+  }, "en");
 
   return {
     scoring,

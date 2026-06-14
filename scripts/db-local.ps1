@@ -1,9 +1,9 @@
-$ErrorActionPreference = "Stop"
-
 param(
   [ValidateSet("up", "down", "restart", "status", "logs")]
   [string]$Action = "up"
 )
+
+$ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $composeFile = Join-Path $root "docker-compose.yml"

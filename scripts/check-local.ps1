@@ -74,13 +74,13 @@ function Get-Status {
   }
 }
 
-function Test-DockerComposeAvailable {
+function Test-DockerComposeUsable {
   if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     return $false
   }
 
   try {
-    & docker compose version *> $null
+    & docker info *> $null
     return $LASTEXITCODE -eq 0
   }
   catch {
@@ -100,7 +100,7 @@ function Get-DockerContainerHealth {
 
 $envMap = Get-EnvMap -Path $webEnvPath
 $statuses = @()
-$dockerComposeAvailable = Test-DockerComposeAvailable
+$dockerComposeAvailable = Test-DockerComposeUsable
 $dockerComposeConfigured = Test-Path $composeFile
 $dockerHealth = $null
 $legacyPostgresAvailable = (Test-Path $postgresDataDir) -and (Test-Path $pgIsReadyExe)

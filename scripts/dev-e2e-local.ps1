@@ -23,13 +23,13 @@ function Test-CommandPath {
   }
 }
 
-function Test-DockerComposeAvailable {
+function Test-DockerComposeUsable {
   if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     return $false
   }
 
   try {
-    & docker compose version *> $null
+    & docker info *> $null
     return $LASTEXITCODE -eq 0
   }
   catch {
@@ -117,7 +117,7 @@ function Start-LocalPostgresForE2E {
 try {
   Test-CommandPath -Path $npmCmd -Label "npm"
 
-  if ((Test-Path $composeFile) -and (Test-Path $dbLocalScript) -and (Test-DockerComposeAvailable)) {
+  if ((Test-Path $composeFile) -and (Test-Path $dbLocalScript) -and (Test-DockerComposeUsable)) {
     Write-Host "Using Docker Compose PostgreSQL backend for E2E" -ForegroundColor Cyan
     & $dbLocalScript up
   }
