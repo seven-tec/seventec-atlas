@@ -4,6 +4,12 @@ test("local release smoke: dev sign-in, demo dashboard, flagship report, compare
   page,
 }) => {
   test.setTimeout(120_000);
+  await page.addInitScript(() => {
+    (window as Window & { __printed?: boolean }).__printed = false;
+    window.print = () => {
+      (window as Window & { __printed?: boolean }).__printed = true;
+    };
+  });
 
   await page.goto("/sign-in");
 
@@ -34,6 +40,20 @@ test("local release smoke: dev sign-in, demo dashboard, flagship report, compare
   ).toBeVisible();
   await expect(page.getByText(/Compared with the previous run/)).toBeVisible();
   await expect(page.getByRole("link", { name: "Open previous" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Share-ready view" })).toBeVisible();
+
+  await page.getByRole("link", { name: "Share-ready view" }).click();
+  await page.waitForURL(/view=share/);
+  await expect(page.getByText("Share-ready mode enabled.")).toBeVisible();
+  await expect(page.getByText("Share-ready note")).toBeVisible();
+
+  await page.goto(page.url().replace("?view=share", ""));
+  await page.getByRole("button", { name: "Export to PDF" }).first().click();
+  await expect
+    .poll(async () =>
+      page.evaluate(() => (window as Window & { __printed?: boolean }).__printed === true),
+    )
+    .toBe(true);
 
   await page.getByRole("link", { name: "Open previous" }).click();
   await page.waitForURL(/\/reports\/[^/]+$/);

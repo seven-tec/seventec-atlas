@@ -75,6 +75,8 @@ What it validates:
 - demo dashboard loads
 - premium report opens
 - compare flow reaches the previous report baseline
+- share-ready report mode opens
+- export-to-PDF trigger reaches `window.print()`
 
 ---
 
