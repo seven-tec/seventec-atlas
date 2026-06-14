@@ -71,6 +71,10 @@ What it validates:
 - landing responds
 - sign-in responds
 - marketing report-proof assets respond
+- development sign-in works
+- demo dashboard loads
+- premium report opens
+- compare flow reaches the previous report baseline
 
 ---
 

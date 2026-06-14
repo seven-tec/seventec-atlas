@@ -1,9 +1,20 @@
 $ErrorActionPreference = "Stop"
 
+$root = Split-Path -Parent $PSScriptRoot
+$npmCmd = "C:\Program Files\nodejs\npm.cmd"
 $landingUrl = "http://localhost:3004/"
 $signInUrl = "http://localhost:3004/sign-in"
 $reportImageEnUrl = "http://localhost:3004/images/marketing/report-proof-en.png"
 $reportImageEsUrl = "http://localhost:3004/images/marketing/report-proof-es.png"
+$smokeSpec = "tests/e2e/local-release-smoke.spec.ts"
+
+function Test-CommandPath {
+  param([string]$Path, [string]$Label)
+
+  if (-not (Test-Path $Path)) {
+    throw "$Label not found at $Path"
+  }
+}
 
 function Invoke-RequiredPage {
   param(
@@ -52,6 +63,19 @@ foreach ($check in $checks) {
     Write-Host "[FAIL] $($check.Name) - $($_.Exception.Message)" -ForegroundColor Red
     exit 1
   }
+}
+
+Write-Host ""
+Write-Host "Running Playwright local release smoke..." -ForegroundColor Cyan
+
+try {
+  Test-CommandPath -Path $npmCmd -Label "npm"
+
+  Push-Location $root
+  & $npmCmd run test:e2e -- $smokeSpec --project=edge
+}
+finally {
+  Pop-Location -ErrorAction SilentlyContinue
 }
 
 Write-Host ""

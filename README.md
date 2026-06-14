@@ -368,6 +368,13 @@ npm run start:local:prod
 npm run local:verify
 ```
 
+This now covers both lightweight HTTP checks and a Playwright smoke path through:
+
+- dev sign-in
+- demo dashboard
+- premium report open
+- compare flow baseline
+
 If your local Windows environment does not resolve `npm` reliably, you can use:
 
 ```bat
