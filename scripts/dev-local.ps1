@@ -2,6 +2,8 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $webDir = Join-Path $root "apps\web"
+$dbLocalScript = Join-Path $PSScriptRoot "db-local.ps1"
+$composeFile = Join-Path $root "docker-compose.yml"
 $postgresDataDir = Join-Path $root ".local\postgres\data"
 $postgresExe = "C:\Program Files\PostgreSQL\18\bin\postgres.exe"
 $pgCtlExe = "C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe"
@@ -16,6 +18,20 @@ function Test-CommandPath {
 
   if (-not (Test-Path $Path)) {
     throw "$Label not found at $Path"
+  }
+}
+
+function Test-DockerComposeAvailable {
+  if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+    return $false
+  }
+
+  try {
+    & docker compose version *> $null
+    return $LASTEXITCODE -eq 0
+  }
+  catch {
+    return $false
   }
 }
 
@@ -86,7 +102,14 @@ function Start-LocalPostgres {
 
 try {
   Test-CommandPath -Path $npmCmd -Label "npm"
-  Start-LocalPostgres
+
+  if ((Test-Path $composeFile) -and (Test-Path $dbLocalScript) -and (Test-DockerComposeAvailable)) {
+    Write-Host "Using Docker Compose PostgreSQL backend" -ForegroundColor Cyan
+    & $dbLocalScript up
+  }
+  else {
+    Start-LocalPostgres
+  }
 
   Write-Host "Starting apps/web on http://localhost:3004" -ForegroundColor Cyan
   Push-Location $webDir

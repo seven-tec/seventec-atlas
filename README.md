@@ -296,7 +296,47 @@ The capture flow signs in with development auth, loads the seeded demo artifact,
 
 ## Local development
 
-### Recommended start
+### Preferred local database path
+
+SevenTec Atlas now includes a Docker Compose setup for PostgreSQL so local onboarding no longer depends on a manual PostgreSQL installation.
+
+#### Start PostgreSQL
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\db-local.ps1 up
+```
+
+or:
+
+```bash
+npm run db:local:up
+```
+
+#### Check PostgreSQL status
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\db-local.ps1 status
+```
+
+#### View PostgreSQL logs
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\db-local.ps1 logs
+```
+
+#### Stop PostgreSQL
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\db-local.ps1 down
+```
+
+### Expected local database connection
+
+```text
+postgresql://atlas:atlasdev@127.0.0.1:5433/seventec_atlas
+```
+
+### Recommended app start
 
 ```bash
 npm run dev:local
@@ -310,8 +350,8 @@ If your local Windows environment does not resolve `npm` reliably, you can use:
 
 ### What `dev:local` does
 
-- starts local PostgreSQL on `127.0.0.1:5433` if that local bundled environment is being used
-- uses `.local/postgres/data`
+- prefers Docker Compose PostgreSQL on `127.0.0.1:5433`
+- falls back to the legacy local PostgreSQL data directory only if Docker is unavailable
 - starts `apps/web` on `http://localhost:3004`
 
 ### Reset local environment
@@ -328,6 +368,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\check-local.ps1
 
 This validates:
 
+- `docker-compose.yml`
+- Docker Compose availability and PostgreSQL container health when Docker is present
 - `apps/web/.env.local`
 - core env variables
 - PostgreSQL port and readiness

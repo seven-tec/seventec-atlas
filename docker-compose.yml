@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: seventec-atlas-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: seventec_atlas
+      POSTGRES_USER: atlas
+      POSTGRES_PASSWORD: atlasdev
+    ports:
+      - "5433:5432"
+    volumes:
+      - seventec_atlas_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas -d seventec_atlas"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+volumes:
+  seventec_atlas_postgres_data:

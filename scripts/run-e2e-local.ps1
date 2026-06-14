@@ -2,6 +2,8 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $webDir = Join-Path $root "apps\web"
+$dbLocalScript = Join-Path $PSScriptRoot "db-local.ps1"
+$composeFile = Join-Path $root "docker-compose.yml"
 $postgresDataDir = Join-Path $root ".local\postgres\data"
 $postgresExe = "C:\Program Files\PostgreSQL\18\bin\postgres.exe"
 $pgIsReadyExe = "C:\Program Files\PostgreSQL\18\bin\pg_isready.exe"
@@ -15,12 +17,27 @@ $nextStdout = Join-Path $root ".local\next-e2e-out.log"
 $nextStderr = Join-Path $root ".local\next-e2e-err.log"
 $postgresProcess = $null
 $nextProcess = $null
+$usingDockerCompose = $false
 
 function Test-CommandPath {
   param([string]$Path, [string]$Label)
 
   if (-not (Test-Path $Path)) {
     throw "$Label not found at $Path"
+  }
+}
+
+function Test-DockerComposeAvailable {
+  if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+    return $false
+  }
+
+  try {
+    & docker compose version *> $null
+    return $LASTEXITCODE -eq 0
+  }
+  catch {
+    return $false
   }
 }
 
@@ -81,27 +98,35 @@ function Wait-ForWeb {
 }
 
 try {
-  Test-CommandPath -Path $postgresExe -Label "PostgreSQL executable"
-  Test-CommandPath -Path $pgIsReadyExe -Label "pg_isready"
   Test-CommandPath -Path $npmCmd -Label "npm"
 
-  Remove-StalePostmasterPid -DataDir $postgresDataDir
-  Remove-Item $postgresStdout,$postgresStderr,$nextStdout,$nextStderr -Force -ErrorAction SilentlyContinue
+  if ((Test-Path $composeFile) -and (Test-Path $dbLocalScript) -and (Test-DockerComposeAvailable)) {
+    Write-Host "Using Docker Compose PostgreSQL backend for E2E" -ForegroundColor Cyan
+    & $dbLocalScript up
+    $usingDockerCompose = $true
+  }
+  else {
+    Test-CommandPath -Path $postgresExe -Label "PostgreSQL executable"
+    Test-CommandPath -Path $pgIsReadyExe -Label "pg_isready"
 
-  $postgresArgs = "-D `"$postgresDataDir`" -p $postgresPort"
-  $postgresProcess = Start-Process `
-    -FilePath $postgresExe `
-    -ArgumentList $postgresArgs `
-    -RedirectStandardOutput $postgresStdout `
-    -RedirectStandardError $postgresStderr `
-    -PassThru
+    Remove-StalePostmasterPid -DataDir $postgresDataDir
+    Remove-Item $postgresStdout,$postgresStderr,$nextStdout,$nextStderr -Force -ErrorAction SilentlyContinue
 
-  if (-not (Wait-ForPostgres)) {
-    if (Test-Path $postgresStderr) {
-      Get-Content $postgresStderr | Write-Output
+    $postgresArgs = "-D `"$postgresDataDir`" -p $postgresPort"
+    $postgresProcess = Start-Process `
+      -FilePath $postgresExe `
+      -ArgumentList $postgresArgs `
+      -RedirectStandardOutput $postgresStdout `
+      -RedirectStandardError $postgresStderr `
+      -PassThru
+
+    if (-not (Wait-ForPostgres)) {
+      if (Test-Path $postgresStderr) {
+        Get-Content $postgresStderr | Write-Output
+      }
+
+      throw "PostgreSQL did not become ready on $postgresHost`:$postgresPort"
     }
-
-    throw "PostgreSQL did not become ready on $postgresHost`:$postgresPort"
   }
 
   $nextProcess = Start-Process `
@@ -134,9 +159,11 @@ finally {
     Stop-Process -Id $nextProcess.Id -Force -ErrorAction SilentlyContinue
   }
 
-  Get-Process postgres -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+  if (-not $usingDockerCompose) {
+    Get-Process postgres -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 
-  if (Test-Path (Join-Path $postgresDataDir "postmaster.pid")) {
-    Remove-Item -LiteralPath (Join-Path $postgresDataDir "postmaster.pid") -Force -ErrorAction SilentlyContinue
+    if (Test-Path (Join-Path $postgresDataDir "postmaster.pid")) {
+      Remove-Item -LiteralPath (Join-Path $postgresDataDir "postmaster.pid") -Force -ErrorAction SilentlyContinue
+    }
   }
 }

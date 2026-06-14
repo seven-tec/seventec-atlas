@@ -2,8 +2,24 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $devLocalScript = Join-Path $PSScriptRoot "dev-local.ps1"
+$dbLocalScript = Join-Path $PSScriptRoot "db-local.ps1"
+$composeFile = Join-Path $root "docker-compose.yml"
 $postgresDataDir = Join-Path $root ".local\postgres\data"
 $pgCtlExe = "C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe"
+
+function Test-DockerComposeAvailable {
+  if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+    return $false
+  }
+
+  try {
+    & docker compose version *> $null
+    return $LASTEXITCODE -eq 0
+  }
+  catch {
+    return $false
+  }
+}
 
 function Stop-LocalWeb {
   $lines = netstat -ano | Select-String ':3004'
@@ -40,7 +56,13 @@ function Stop-LocalPostgres {
 }
 
 Stop-LocalWeb
-Stop-LocalPostgres
+
+if ((Test-Path $composeFile) -and (Test-Path $dbLocalScript) -and (Test-DockerComposeAvailable)) {
+  & $dbLocalScript restart
+}
+else {
+  Stop-LocalPostgres
+}
 
 Write-Host "Restarting local stack..." -ForegroundColor Cyan
 & $devLocalScript

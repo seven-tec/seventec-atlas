@@ -2,6 +2,8 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $webDir = Join-Path $root "apps\web"
+$dbLocalScript = Join-Path $PSScriptRoot "db-local.ps1"
+$composeFile = Join-Path $root "docker-compose.yml"
 $postgresDataDir = Join-Path $root ".local\postgres\data"
 $postgresExe = "C:\Program Files\PostgreSQL\18\bin\postgres.exe"
 $pgIsReadyExe = "C:\Program Files\PostgreSQL\18\bin\pg_isready.exe"
@@ -18,6 +20,20 @@ function Test-CommandPath {
 
   if (-not (Test-Path $Path)) {
     throw "$Label not found at $Path"
+  }
+}
+
+function Test-DockerComposeAvailable {
+  if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+    return $false
+  }
+
+  try {
+    & docker compose version *> $null
+    return $LASTEXITCODE -eq 0
+  }
+  catch {
+    return $false
   }
 }
 
@@ -100,7 +116,14 @@ function Start-LocalPostgresForE2E {
 
 try {
   Test-CommandPath -Path $npmCmd -Label "npm"
-  Start-LocalPostgresForE2E
+
+  if ((Test-Path $composeFile) -and (Test-Path $dbLocalScript) -and (Test-DockerComposeAvailable)) {
+    Write-Host "Using Docker Compose PostgreSQL backend for E2E" -ForegroundColor Cyan
+    & $dbLocalScript up
+  }
+  else {
+    Start-LocalPostgresForE2E
+  }
 
   Write-Host "Starting apps/web on http://localhost:3004 for E2E" -ForegroundColor Cyan
   Push-Location $webDir

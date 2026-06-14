@@ -1,11 +1,13 @@
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
+$composeFile = Join-Path $root "docker-compose.yml"
 $webEnvPath = Join-Path $root "apps\web\.env.local"
 $postgresDataDir = Join-Path $root ".local\postgres\data"
 $postgresHost = "127.0.0.1"
 $postgresPort = 5433
 $webUrl = "http://localhost:3004/sign-in"
+$containerName = "seventec-atlas-postgres"
 $pgIsReadyExe = "C:\Program Files\PostgreSQL\18\bin\pg_isready.exe"
 
 function Test-HttpOk {
@@ -72,12 +74,65 @@ function Get-Status {
   }
 }
 
+function Test-DockerComposeAvailable {
+  if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+    return $false
+  }
+
+  try {
+    & docker compose version *> $null
+    return $LASTEXITCODE -eq 0
+  }
+  catch {
+    return $false
+  }
+}
+
+function Get-DockerContainerHealth {
+  try {
+    $status = & docker inspect --format "{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}" $containerName 2>$null
+    return ($status | Select-Object -First 1).Trim()
+  }
+  catch {
+    return $null
+  }
+}
+
 $envMap = Get-EnvMap -Path $webEnvPath
 $statuses = @()
+$dockerComposeAvailable = Test-DockerComposeAvailable
+$dockerComposeConfigured = Test-Path $composeFile
+$dockerHealth = $null
+$legacyPostgresAvailable = (Test-Path $postgresDataDir) -and (Test-Path $pgIsReadyExe)
+$postgresMode = "unavailable"
+
+if ($dockerComposeAvailable -and $dockerComposeConfigured) {
+  $postgresMode = "docker"
+  $dockerHealth = Get-DockerContainerHealth
+}
+elseif ($legacyPostgresAvailable) {
+  $postgresMode = "legacy"
+}
 
 $statuses += Get-Status -Name "apps/web/.env.local exists" -Ok (Test-Path $webEnvPath) -Details $webEnvPath
-$statuses += Get-Status -Name "postgres data dir exists" -Ok (Test-Path $postgresDataDir) -Details $postgresDataDir
-$statuses += Get-Status -Name "pg_isready available" -Ok (Test-Path $pgIsReadyExe) -Details $pgIsReadyExe
+$statuses += Get-Status -Name "docker-compose.yml exists" -Ok $dockerComposeConfigured -Details $composeFile
+$statuses += Get-Status -Name "postgres backend mode" -Ok ($postgresMode -ne "unavailable") -Details $postgresMode
+
+if ($postgresMode -eq "docker") {
+  $statuses += Get-Status -Name "docker compose available" -Ok $true -Details "docker compose"
+  $statuses += Get-Status -Name "postgres data dir exists (legacy fallback)" -Ok $true -Details "not required in docker mode"
+  $statuses += Get-Status -Name "pg_isready available (legacy fallback)" -Ok $true -Details "not required in docker mode"
+}
+elseif ($postgresMode -eq "legacy") {
+  $statuses += Get-Status -Name "docker compose available" -Ok $true -Details "not required in legacy mode"
+  $statuses += Get-Status -Name "postgres data dir exists (legacy fallback)" -Ok (Test-Path $postgresDataDir) -Details $postgresDataDir
+  $statuses += Get-Status -Name "pg_isready available (legacy fallback)" -Ok (Test-Path $pgIsReadyExe) -Details $pgIsReadyExe
+}
+else {
+  $statuses += Get-Status -Name "docker compose available" -Ok $dockerComposeAvailable -Details "docker compose"
+  $statuses += Get-Status -Name "postgres data dir exists (legacy fallback)" -Ok (Test-Path $postgresDataDir) -Details $postgresDataDir
+  $statuses += Get-Status -Name "pg_isready available (legacy fallback)" -Ok (Test-Path $pgIsReadyExe) -Details $pgIsReadyExe
+}
 $statuses += Get-Status -Name "DATABASE_URL configured" -Ok ($envMap.ContainsKey("DATABASE_URL") -and $envMap["DATABASE_URL"].Length -gt 0) -Details ($envMap["DATABASE_URL"])
 $statuses += Get-Status -Name "AUTH_SECRET configured" -Ok ($envMap.ContainsKey("AUTH_SECRET") -and $envMap["AUTH_SECRET"] -ne "replace-me") -Details "AUTH_SECRET present"
 $statuses += Get-Status -Name "AI_PROVIDER configured" -Ok ($envMap.ContainsKey("AI_PROVIDER") -and $envMap["AI_PROVIDER"].Length -gt 0) -Details ($envMap["AI_PROVIDER"])
@@ -86,12 +141,22 @@ $statuses += Get-Status -Name "OPENROUTER_MODEL configured" -Ok ($envMap.Contain
 $statuses += Get-Status -Name "port 5433 listening" -Ok (Test-PortListening -Port $postgresPort) -Details "${postgresHost}:$postgresPort"
 $statuses += Get-Status -Name "port 3004 listening" -Ok (Test-PortListening -Port 3004) -Details "localhost:3004"
 
-if (Test-Path $pgIsReadyExe) {
+if ($postgresMode -eq "docker") {
+  if ([string]::IsNullOrWhiteSpace($dockerHealth)) {
+    $dockerHealthDetails = "not-running"
+  }
+  else {
+    $dockerHealthDetails = $dockerHealth
+  }
+
+  $statuses += Get-Status -Name "docker postgres healthy" -Ok ($dockerHealth -eq "healthy") -Details $dockerHealthDetails
+}
+elseif ($postgresMode -eq "legacy") {
   & $pgIsReadyExe -h $postgresHost -p $postgresPort *> $null
   $statuses += Get-Status -Name "postgres accepts connections" -Ok ($LASTEXITCODE -eq 0) -Details "${postgresHost}:$postgresPort"
 }
 else {
-  $statuses += Get-Status -Name "postgres accepts connections" -Ok $false -Details "pg_isready missing"
+  $statuses += Get-Status -Name "postgres accepts connections" -Ok $false -Details "neither docker compose nor pg_isready available"
 }
 
 $statuses += Get-Status -Name "web sign-in responds" -Ok (Test-HttpOk -Url $webUrl) -Details $webUrl
