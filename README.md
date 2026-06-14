@@ -342,6 +342,32 @@ postgresql://atlas:atlasdev@127.0.0.1:5433/seventec_atlas
 npm run dev:local
 ```
 
+### Localhost release kit
+
+#### Prepare the local stack
+
+```bash
+npm run local:prepare
+```
+
+#### Start flagship demo mode
+
+```bash
+npm run local:demo
+```
+
+#### Start production-like localhost mode
+
+```bash
+npm run start:local:prod
+```
+
+#### Verify the local release
+
+```bash
+npm run local:verify
+```
+
 If your local Windows environment does not resolve `npm` reliably, you can use:
 
 ```bat
@@ -374,6 +400,10 @@ This validates:
 - core env variables
 - PostgreSQL port and readiness
 - web port and `/sign-in` response
+
+For the full localhost-only operating flow, see:
+
+- `./docs/localhost-release-kit.md`
 
 ---
 

@@ -6,6 +6,10 @@
   "scripts": {
     "dev": "turbo dev",
     "dev:local": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-local.ps1",
+    "local:prepare": "powershell -ExecutionPolicy Bypass -File ./scripts/local-prepare.ps1",
+    "local:demo": "powershell -ExecutionPolicy Bypass -File ./scripts/local-demo.ps1",
+    "start:local:prod": "powershell -ExecutionPolicy Bypass -File ./scripts/start-local-prod.ps1",
+    "local:verify": "powershell -ExecutionPolicy Bypass -File ./scripts/verify-local-release.ps1",
     "db:local:up": "powershell -ExecutionPolicy Bypass -File ./scripts/db-local.ps1 up",
     "db:local:down": "powershell -ExecutionPolicy Bypass -File ./scripts/db-local.ps1 down",
     "db:local:status": "powershell -ExecutionPolicy Bypass -File ./scripts/db-local.ps1 status",
@@ -20,7 +24,8 @@
     "demo:seed": "node --experimental-strip-types ./scripts/seed-demo.ts",
     "screenshots:i18n": "node ./scripts/capture-final-i18n.mjs",
     "db:generate": "pnpm --filter @seventec-atlas/db db:generate",
-    "db:migrate": "pnpm --filter @seventec-atlas/db db:migrate"
+    "db:migrate": "pnpm --filter @seventec-atlas/db db:migrate",
+    "db:migrate:deploy": "pnpm --filter @seventec-atlas/db db:migrate:deploy"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
